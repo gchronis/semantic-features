@@ -15,9 +15,10 @@ from model import FFNModule, FeatureNormPredictor, FFNParams, TrainingParams
 corpora = ["acl", "coca"]
 data_dir = "/home/gsc685/data/collected_tokens/"
 embedding_model = 'bert-base-uncased'
-model_dir = '/home/shared/semantic_features/saved_models/bert_models_all/bert_to_buchanan_layer7.ckpt'
 layer = 7
 
+
+model_dir = '/home/shared/semantic_features/saved_models/bert_models_all/bert_to_buchanan_layer{}.ckpt'.format(layer)
 
 # helper function to batch process inputs
 def batch_iterable(iterable, batch_size):
@@ -83,7 +84,7 @@ for corpus in corpora:
         
         
         """
-        run the model over the data
+        run the model over the data to get embeddings and features
         """
     
         feats = [] * len(data)
@@ -102,16 +103,61 @@ for corpus in corpora:
             #feats[i*batch_size:i*batch_size+batch_size] = vecs
             feats.append(vecs)
         
+        ## create numpy matrix with N_samples x N_features
         feats = torch.cat(feats).detach().cpu().numpy()
-        # buchanan
-        # ratings_df = pd.read_csv('feature-norms/buchanan/cue_feature_words.csv', na_values=['na'])
-        # # fill in 0 for na's
-        # ratings_df.fillna(value=0, inplace=True)
-        # feature_cols = ratings_df["translated"].unique()
-        # print(feature_cols)
+
+        """
+        run clustering model to get clusters from embeddings
+        """
         
+
+        """
+        normalize 
+        """
+
+         # get the names of the features
+        buchanan_norms = pd.read_csv('/home/gsc685/semantic-features/feature-norms/buchanan/cue_feature_words.csv')
+        name_col = 'translated'
+        freq_col = 'frequency_'+name_col
+        feature_labels = buchanan_norms[name_col].unique().tolist()
+
+
+
+        ids = []
+        sources = []
+        sent = []
+        cluster = []
+        feature = []
+        predicted_value = []
+        for i, (index, row) in enumerate(sample_df.iterrows()):
+
+            j = 0
+            feature_vec = feats[i] # get the features for this sample
+
+            for value in feature_vec:
+                #print(feature_labels[j])
+                ids.append(i)
+                sent.append(row.sentence)
+                sources.append(row.source)
+                cluster.append(clusters[i])
+                feature.append(feature_labels[j])
+                predicted_value.append(value)
+                j+=1
+            j=0
+
+        tidy_df = pd.DataFrame.from_records(
+            {"id": ids,
+             "source": sources,
+            "rent": sent, 
+            "word": word, 
+            "cluster": cluster, 
+            "feature": feature, 
+            "predicted_value": predicted_value}
+        )
+
+        tidy_df.to_csv('./tidy_feature_predictions/{}/{}/{}_buchanan_layer_7.csv'.format(model_name,source,word)) 
         
-        outpath = os.path.join(data_dir, corpus, word + "_feature_vectors_bert_buchanan_layer7.txt")
+        outpath = os.path.join(data_dir, corpus, word + "_feature_vectors_bert_buchanan_layer" + layer + ".txt")
         np.savetxt(outpath, feats)  # %d is used for integer formatting
 
         # for i in range(len(feature_cols)):
