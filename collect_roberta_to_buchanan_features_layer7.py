@@ -34,18 +34,10 @@ for corpus in corpora:
     print("predicting features for ", corpus, " corpus")
 
     
-    # token_files = glob.glob(data_dir + corpus + "/*.csv") 
+    token_files = glob.glob(data_dir + corpus + "/*.csv") 
     # just focus on one word for now
     # token_files = [os.path.join(data_dir, corpus, 'human.csv')]
-    token_files = [
-        os.path.join(data_dir, corpus, 'chair.csv'),
-        os.path.join(data_dir, corpus, 'bird.csv'),
-        os.path.join(data_dir, corpus, 'vine.csv'),
-        os.path.join(data_dir, corpus, 'football.csv'),
-        os.path.join(data_dir, corpus, 'model.csv'),
-        os.path.join(data_dir, corpus, 'human.csv'),
 
-    ]
     for filename in token_files:
         print("predicting features for ", filename)
 
@@ -62,6 +54,7 @@ for corpus in corpora:
         
         tokens_path = os.path.join(data_dir, corpus, filename)
         df = pd.read_csv(tokens_path)
+
         
         # filter sentences that are less than 300 in length
         df = df[ df["sentence"].apply(lambda x: len(x) < 300)]
@@ -203,21 +196,21 @@ for corpus in corpora:
 
         ids = []
         sources = []
-        sent = []
+        #sent = []
         cluster = []
         feature = []
         predicted_value = []
 
         for cluster_index, i in enumerate(good_indices): # you have lists of different indexing. clusters and embeddings and features are all squished together and indexed wrong
 
-            row = df.iloc[i]
+            row = df.iloc[i] # row info for token level data
             j = 0
             feature_vec = feats[cluster_index] # get the features for this sample
 
             for value in feature_vec:
                 #print(feature_labels[j])
-                ids.append(i)
-                sent.append(row.sentence)
+                ids.append(row["Unnamed: 0"]) # the index didnt get a name
+                #sent.append(row.sentence)
                 sources.append(corpus)
                 cluster.append(clusters[cluster_index])
                 feature.append(feature_labels[j])
@@ -226,9 +219,9 @@ for corpus in corpora:
             j=0
 
         tidy_df = pd.DataFrame.from_records(
-            {"id": ids,
+            {"token_id": ids,
              "source": sources,
-            "sent": sent, 
+            #"sent": sent, 
             "word": word, 
             "cluster": cluster, 
             "feature": feature, 
