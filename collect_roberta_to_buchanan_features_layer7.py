@@ -13,7 +13,8 @@ from model import FFNModule, FeatureNormPredictor, FFNParams, TrainingParams
 
 
 
-corpora = ["coca", "acl"]
+#corpora = ["coca", "acl"
+corpora = ["acl"]
 data_dir = "/home/gsc685/data/collected_tokens/"
 out_dir = "/home/gsc685/data/features/"
 embedding_model = 'roberta-base'
@@ -231,4 +232,5 @@ for corpus in corpora:
         
         # save to disk
         outpath = os.path.join(out_dir, corpus, word + "_feature_vectors_roberta_buchanan_layer7.csv")
+        print("saving results to ", outpath)
         tidy_df.to_csv(outpath) 

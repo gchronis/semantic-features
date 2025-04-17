@@ -30,8 +30,8 @@ def batch_iterable(iterable, batch_size):
 
 
 
-token_file = '/home/gsc685/acl_metapragmatics/collected_tokens/semcor/validation_tokens.csv'
-corpus_file = '/home/gsc685/acl_metapragmatics/collected_tokens/semcor_corpus.csv' 
+token_file = '/home/gsc685/data/collected_tokens/semcor/semcor_validation_tokens.csv'
+corpus_file = '/home/gsc685/data/semcor_corpus.csv' 
 # just focus on one word for now
 # token_files = [os.path.join(data_dir, corpus, 'human.csv')]
 
@@ -39,10 +39,10 @@ all_toks = pd.read_csv(token_file)
 sents = pd.read_csv(corpus_file)
 
 # join sentences to token dataset
-df = all_toks.merge(sents, left_on='sentence_id', right_on='id', how='left')
+all_toks = all_toks.merge(sents, left_on='sentence_id', right_on='id', how='left')
 
 
-unique_lemmas = df['lemma'].unique()
+unique_lemmas = all_toks['lemma'].unique()
 
 for lemma in unique_lemmas:
     print("predicting features for ", lemma)
@@ -53,7 +53,7 @@ for lemma in unique_lemmas:
     """    
     
     # get tokens for this lemma
-    df = df[df['lemma'] == lemma]
+    df = all_toks[all_toks['lemma'] == lemma]
 
     # filter sentences that are less than 300 in length
     df = df[ df["sentence"].apply(lambda x: len(x) < 300)]
@@ -111,6 +111,10 @@ for lemma in unique_lemmas:
             vecs = predicted.squeeze(0)
         except:
             print(batch)
+
+            for s, t in batch:
+                try: assert t in s
+                except: print(s, t)
             embs = lm.extract_representation(batch, layer=layer)
             vecs = torch.empty((batch_size,num_dims), device='cuda')
 
